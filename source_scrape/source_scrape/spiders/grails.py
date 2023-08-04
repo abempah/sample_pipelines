@@ -1,22 +1,27 @@
 import scrapy   
-from scrapy import Spider
+from scrapy.spiders import CrawlSpider, Rule
+from scrapy.linkextractors import LinkExtractor
+from pprint import pprint as ppr
 
-class GrailsSpider(Spider):
+class GrailsSpider(CrawlSpider):
     name = 'grails'
     allowed_domains = ['stockx.com']
-    start_urls = ['https://stockx.com/sneakers/most-popular']
+    start_urls = ['https://stockx.com/new-balance-827-abzorb-aime-leon-dore']
+    rules = (
+        Rule(LinkExtractor(), callback='parse_items', process_links='keep_first_link', follow=True),
+    )
 
-    def parse(self, response):
-        # Extracting the content using css selectors
-        titles = response.css('.plugin-title a::text').extract()
-        downloads = response.css('.plugin-downloads::text').extract()
-        # Give the extracted content row wise
-        for item in zip(titles,downloads):
-            # create a dictionary to store the scraped info
-            scraped_info = {
-                'title' : item[0],
-                'downloads' : item[1],
-            }
+    def keep_first_link(self, links):
+        
+        ppr(links)
+        print(len(links))
+        raise Exception()
+        return links[0]
 
-            # yield or give the scraped info to scrapy
-            yield scraped_info
+    def parse_items(self, response):
+        url = response.url
+        grail_name = response.css('h1::text').extract_first()
+        last_sale_price = response.xpath('//*[@id="main-content"]/div/section/div/div[6]/div/div/div[1]/p').extract_first()
+        print(grail_name)
+        print(last_sale_price)
+        print(url)
